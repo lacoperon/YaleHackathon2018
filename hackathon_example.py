@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
-from tensorflow.contrib.slim.nets import inception
+import mobilenet_v1
 from tqdm import tqdm
 
 # Create top level logger
@@ -122,7 +122,7 @@ def download_dataset(dest_dir, large):
     )
 
     if os.path.exists(extracted_dir_path):
-        shutil.rmtree(extracted_dir_path)
+        os.rmdir(extracted_dir_path)
 
     for downloaded_file in downloaded_files:
         log.info('Extracting the data from {}'.format(downloaded_file))
@@ -190,7 +190,7 @@ def evaluate(input_file, batch_size, export_dir):
         next_test_batch = data_iterator.get_next()
 
         saver = tf.train.import_meta_graph(
-            os.path.join(export_dir, 'butterfly-model.meta')
+            os.path.join(export_dir, 'buttefly-model.meta')
         )
         images = graph.get_tensor_by_name("images:0")
         labels = graph.get_tensor_by_name("labels:0")
@@ -376,8 +376,7 @@ def train(input_file, batch_size, number_of_epochs, export_dir):
                     best_validation_accuracy < accuracy
             ):
                 best_validation_accuracy = accuracy
-                saver.save(session, os.path.join(export_dir,
-                                                 'butterfly-model'))
+                saver.save(session, os.path.join(export_dir, 'buttefly-model'))
 
 
 def create_model(images, labels):
@@ -398,16 +397,16 @@ def create_model(images, labels):
     :return metrics_to_values: The metrics collected when training.
     :return metrics_to_updates: The metrics update op used when training.
     """
-    with slim.arg_scope(inception.inception_v1_arg_scope()):
+    with slim.arg_scope(mobilenet_v1.mobilenet_v1_arg_scope()):
         #  Load the deep learning model.
-        logits, end_points = inception.inception_v1(
+        logits, end_points = mobilenet_v1.mobilenet_v1(
             images,
             num_classes=NUM_CLASSES,
             is_training=False
         )
 
         # We are going to train only the last layer of the model.
-        trainable_layer = 'InceptionV1/Logits/Conv2d_0c_1x1'
+        trainable_layer = 'MobilenetV1/Logits/Conv2d_1c_1x1'
 
         variables_to_restore = slim.get_variables_to_restore(
             exclude=[trainable_layer]
@@ -447,7 +446,7 @@ def create_model(images, labels):
 
         # Define load predefined model operation.
         restore_op, feed_dict = slim.assign_from_checkpoint(
-            'inception_v1.ckpt',
+            'mobilenet_v1_1.0_224_2017_06_14/mobilenet_v1_1.0_224.ckpt',
             variables_to_restore
         )
 

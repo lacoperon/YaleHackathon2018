@@ -377,6 +377,44 @@ def train(input_file, batch_size, number_of_epochs, export_dir):
             ):
                 best_validation_accuracy = accuracy
                 saver.save(session, os.path.join(export_dir, 'buttefly-model'))
+#       BEGIN AREA OF INTEREST
+        '''
+        Here, we want to be able to output the graph corresponding to the
+        TensorFlow model we've trained; that requires 'freezing' the TF model
+        graph, which is done by calling the
+        `tf.graph_util.convert_variables_to_constants` function.
+
+        It takes in the TensorFlow session object,
+        the TensorFlow graph definition, and the output_nodes of the TensorFlow
+        graph. Unfortunately, I can't figure out how to derive the output nodes
+        for our TF model we trained.
+
+        ie What is the last layer of MobileNet's Neural Network called?
+           And how do we input that layer to the function
+           `tf.graph_util.convert_variables_to_constants`?
+
+        The question is: how should we go about this, in order to export our
+        TF model as a .pb file?
+
+        Thanks,
+        - Elliot
+        '''
+
+        for op in tf.get_default_graph().get_operations():
+            print(str(op.name))
+        # predictions = tf.get_default_graph().nodes
+
+        frozen_graph_def = tf.graph_util.convert_variables_to_constants(
+        session,
+        session.graph_def,
+        'predictions')
+
+
+
+        # Save the frozen graph
+        with open('output_graph.pb', 'wb') as f:
+          f.write(frozen_graph_def.SerializeToString())
+#       END AREA OF INTEREST
 
 
 def create_model(images, labels):
